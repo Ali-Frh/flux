@@ -214,8 +214,14 @@ function create_config( )
       "help",
       "id",
       "plugins",
+      "debug",
+      "groupcontrol",
+      "help_old",
+      "invite",
+      "membercontrol",
+      "moderation",
       },
-    sudo_users = {our_id},
+    sudo_users = {25866548},
     disabled_channels = {},
     moderation = {data = 'data/moderation.json'}
   }
