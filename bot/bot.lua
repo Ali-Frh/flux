@@ -4,13 +4,17 @@ package.cpath = package.cpath .. ';.luarocks/lib/lua/5.2/?.so'
 
 require("./bot/utils")
 
-VERSION = '0.14.4'
+local f = assert(io.popen('/usr/bin/git describe --tags', 'r'))
+VERSION = assert(f:read('*a'))
+f:close()
 
 -- This function is called when tg receive a msg
 function on_msg_receive (msg)
   if not started then
     return
   end
+
+  msg = backward_msg_format(msg)
 
   local receiver = get_receiver(msg)
 
@@ -207,26 +211,10 @@ function create_config( )
   -- A simple config with basic plugins and ourselves as privileged user
   config = {
     enabled_plugins = {
-      "echo",
-      "get",
-      "google",
-      "groupmanager",
       "help",
       "id",
-      "images",
-      "img_google",
-      "location",
-      "media",
       "plugins",
-      "channels",
-      "set",
-      "stats",
-      "time",
-      "version",
-      "weather",
-      "youtube",
-      "media_handler",
-      "moderation"},
+      },
     sudo_users = {our_id},
     disabled_channels = {},
     moderation = {data = 'data/moderation.json'}
@@ -272,7 +260,6 @@ function load_plugins()
   end
 end
 
--- custom add
 function load_data(filename)
 
 	local f = io.open(filename)

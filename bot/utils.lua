@@ -22,6 +22,16 @@ function get_receiver(msg)
   if msg.to.type == 'encr_chat' then
     return msg.to.print_name
   end
+  if msg.to.type == 'channel' then
+    return 'channel#id'..msg.to.id
+  end
+end
+
+function is_user_msg( msg )
+  if msg.to.type == 'user' then
+    return true
+  end
+  return false
 end
 
 function is_chat_msg( msg )
@@ -31,6 +41,12 @@ function is_chat_msg( msg )
   return false
 end
 
+function is_channel_msg( msg )
+  if msg.to.type == 'channel' then
+    return true
+  end
+  return false
+end
 function string.random(length)
    local str = "";
    for i = 1, length do
@@ -431,15 +447,6 @@ end
 
 -- Check if user can use the plugin
 function user_allowed(plugin, msg)
-  -- Berfungsi utk mengecek user jika plugin moderated = true
-  if plugin.moderated and not is_momod(msg) then --Cek apakah user adalah momod
-    if plugin.moderated and not is_admin(msg) then -- Cek apakah user adalah admin
-      if plugin.moderated and not is_sudo(msg) then -- Cek apakah user adalah sudoers
-        return false
-      end
-    end
-  end
-  -- Berfungsi mengecek user jika plugin privileged = true
   if plugin.privileged and not is_sudo(msg) then
     return false
   end
@@ -558,19 +565,19 @@ function load_from_file(file, default_data)
     print ('Created file', file)
   else
     print ('Data loaded from file', file)
-    f:close() 
+    f:close()
   end
   return loadfile (file)()
 end
 
 -- See http://stackoverflow.com/a/14899740
 function unescape_html(str)
-  local map = { 
-    ["lt"]  = "<", 
+  local map = {
+    ["lt"]  = "<",
     ["gt"]  = ">",
     ["amp"] = "&",
     ["quot"] = '"',
-    ["apos"] = "'" 
+    ["apos"] = "'"
   }
   new = string.gsub(str, '(&(#?x?)([%d%a]+);)', function(orig, n, s)
     var = map[s] or n == "#" and string.char(s)
@@ -579,4 +586,22 @@ function unescape_html(str)
     return var
   end)
   return new
+end
+
+-- Workarrond to format the message as previously was received
+function backward_msg_format (msg)
+  for k,name in ipairs({'from', 'to'}) do
+    local longid = msg[name].id
+    msg[name].id = msg[name].peer_id
+    msg[name].peer_id = longid
+    msg[name].type = msg[name].peer_type
+  end
+  if msg.action and (msg.action.user or msg.action.link_issuer) then
+    local user = msg.action.user or msg.action.link_issuer
+    local longid = user.id
+    user.id = user.peer_id
+    user.peer_id = longid
+    user.type = user.peer_type
+  end
+  return msg
 end
